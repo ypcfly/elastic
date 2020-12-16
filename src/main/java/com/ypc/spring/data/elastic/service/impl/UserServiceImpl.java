@@ -14,12 +14,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -71,6 +72,18 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(userEntity);
     }
 
+    private String updateUser(UserEntity userEntity) {
+        log.info(">>>> user={} <<<<",userEntity);
+        Map<String,Object> paramMap = new HashMap<>();
+        
+        paramMap.put("id",userEntity.getId());
+        paramMap.put("userMobile",userEntity.getUserMobile());
+        UpdateQuery updateQuery = UpdateQuery.builder(userEntity.getId()).withDocument(Document.from(paramMap)).build();
+        UpdateResponse updateResponse = elasticsearchRestTemplate.update(updateQuery, IndexCoordinates.of("user_entity_index"));
+        UpdateResponse.Result result = updateResponse.getResult();
+        return String.valueOf(result);
+    }
+
     @Override
     public UserEntity queryById(String id) {
         Optional<UserEntity> optional = userRepository.findById(id);
@@ -84,13 +97,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserEntity update(UserEntity userEntity) {
+//        Optional<UserEntity> optional = userRepository.findById(userEntity.getId());
+//        if (!optional.isPresent()) {
+//            return null;
+//        }
+//        List<OrderEntity> orderEntityList = optional.get().getOrderEntityList();
+//        userEntity.setOrderEntityList(orderEntityList);
+//        return userRepository.save(userEntity);
+
+        String result = updateUser(userEntity);
         Optional<UserEntity> optional = userRepository.findById(userEntity.getId());
-        if (!optional.isPresent()) {
-            return null;
-        }
-        List<OrderEntity> orderEntityList = optional.get().getOrderEntityList();
-        userEntity.setOrderEntityList(orderEntityList);
-        return userRepository.save(userEntity);
+        return optional.isPresent() ? optional.get() : null;
     }
 
     private void setProperties(OrderEntity orderEntity, int i) {
