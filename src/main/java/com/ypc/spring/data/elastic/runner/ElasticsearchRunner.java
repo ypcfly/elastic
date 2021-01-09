@@ -1,22 +1,22 @@
 package com.ypc.spring.data.elastic.runner;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DateUtil;
 import com.ypc.spring.data.elastic.entity.OrderEntity;
 import com.ypc.spring.data.elastic.entity.UserEntity;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.common.settings.Settings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -97,7 +97,8 @@ public class ElasticsearchRunner implements ApplicationRunner {
             if ("updateTime".equals(key) || "createTime".equals(key)) {
                 field.put("type","date");
                 field.put("store",true);
-                field.put("format",DATE_FORMAT);
+                Date date = (Date) entry.getValue();
+                field.put("format", DateUtil.format(date,DATE_FORMAT));
             } else {
                 field.put("type","keyword");
                 field.put("store",true);
